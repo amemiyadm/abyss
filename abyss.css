@@ -1,0 +1,25 @@
+:root {
+    --z-index-abyss: 1000;
+}
+
+.abyss-suggestions-container {
+    position: absolute;
+    display: none;
+    background-color: white;
+    border: 1px solid oklch(86.9% 0.022 252.894);
+    z-index: var(--z-index-abyss);
+}
+
+.abyss-suggestions-container[data-abyss-is-open="true"] {
+    display: block;
+}
+
+.abyss-suggestion-item {
+    padding: 8px;
+    color: oklch(37.2% 0.044 257.287);
+    cursor: pointer;
+}
+
+.abyss-suggestion-item[data-abyss-is-active="true"] {
+    background-color: oklch(96.8% 0.007 247.896);
+}

@@ -9,10 +9,8 @@ export class Abyss {
     }
 
     static kataToHira(str) {
-        const katakana = /(?!\u30FC)[\u30A0-\u30FF]/g;
-        return str.replace(katakana, (match) => {
-            const chr = match.charCodeAt(0) - 0x60;
-            return String.fromCharCode(chr);
+        return str.replace(/[\u30A1-\u30F6]/g, (match) => {
+            return String.fromCharCode(match.charCodeAt(0) - 0x60);
         });
     }
 
@@ -35,7 +33,7 @@ export class Abyss {
     previousFirstItem = '';
     previousCount = 0;
     currentFocus = 0;
-    suggestionsContainer = Abyss.el('ul', 'abyss-suggestions-container');
+    container = Abyss.el('ul', 'abyss-container');
 
     constructor(inputEl, data, limit = 4) {
         this.inputEl = inputEl;
@@ -44,33 +42,33 @@ export class Abyss {
 
         if (!this.root) {
             this.root = new Ceres();
-            Ceres.buildTrie(this.root, data)
+            Ceres.build(data);
             Abyss.dataCache.set(data, this.root);
         }
 
         this.inputEl.addEventListener('input', this);
-        this.suggestionsContainer.addEventListener('click', this);
-        this.suggestionsContainer.addEventListener('mouseover', this);
-        document.body.appendChild(this.suggestionsContainer);
+        this.container.addEventListener('click', this);
+        this.container.addEventListener('mouseover', this);
+        document.body.appendChild(this.container);
     }
 
     handleEvent(e) {
         const isInputEl = (e.target === this.inputEl);
-        const isSuggestionsContainer = this.suggestionsContainer.contains(e.target);
-        const isOutside = (e.target === document && !isInputEl && !isSuggestionsContainer);
+        const isContainer = this.container.contains(e.target);
+        const isOutside = (e.target === document && !isInputEl && !isContainer);
 
-        if (!isInputEl && !isSuggestionsContainer && !isOutside) return;
+        if (!isInputEl && !isContainer && !isOutside) return;
 
         if (isInputEl && (e.type === 'input')) return this.handleInputElInput(e);
         if (isInputEl && (e.type === 'keydown')) return this.handleInputElKeyDown(e);
-        if (isSuggestionsContainer && (e.type === 'click')) return this.handleSuggestionClick(e);
-        if (isSuggestionsContainer && (e.type === 'mouseover')) return this.handleSuggestionMouseover(e);
+        if (isContainer && (e.type === 'click')) return this.handleSuggestionClick(e);
+        if (isContainer && (e.type === 'mouseover')) return this.handleSuggestionMouseover(e);
         if (isOutside && (e.type === 'click')) return this.handleClickOutside();
     }
 
     open() {
         this.inputEl.addEventListener('keydown', this);
-        this.suggestionsContainer.dataset.abyssIsOpen = 'true';
+        this.container.dataset.abyssIsOpen = 'true';
         this.isOpen = true;
         Abyss.activeInstance = this;
         document.addEventListener('click', this);
@@ -79,7 +77,7 @@ export class Abyss {
 
     close() {
         this.inputEl.removeEventListener('keydown', this);
-        this.suggestionsContainer.removeAttribute('data-abyss-is-open');
+        this.container.removeAttribute('data-abyss-is-open');
         this.isOpen = false;
         if (Abyss.activeInstance === this) {
             Abyss.activeInstance = null;
@@ -90,21 +88,21 @@ export class Abyss {
     destroy() {
         this.close();
         this.inputEl.removeEventListener('input', this);
-        this.suggestionsContainer.removeEventListener('click', this);
-        this.suggestionsContainer.removeEventListener('mouseover', this);
-        this.suggestionsContainer.remove();
+        this.container.removeEventListener('click', this);
+        this.container.removeEventListener('mouseover', this);
+        this.container.remove();
     }
 
     updatePosition() {
         const inputPosition = this.inputEl.getBoundingClientRect();
-        this.suggestionsContainer.style.top = `${inputPosition.bottom + window.scrollY}px`;
-        this.suggestionsContainer.style.left = `${inputPosition.left + window.scrollX}px`;
-        this.suggestionsContainer.style.width = `${inputPosition.width}px`;
+        this.container.style.top = `${inputPosition.bottom + window.scrollY}px`;
+        this.container.style.left = `${inputPosition.left + window.scrollX}px`;
+        this.container.style.width = `${inputPosition.width}px`;
     }
 
     updateActiveItem() {
-        const active = this.suggestionsContainer.querySelector('[data-abyss-is-active="true"]');
-        const nextActive = this.suggestionsContainer.children[this.currentFocus];
+        const active = this.container.querySelector('[data-abyss-is-active="true"]');
+        const nextActive = this.container.children[this.currentFocus];
 
         if (active) {
             active.removeAttribute('data-abyss-is-active');
@@ -126,15 +124,15 @@ export class Abyss {
         }
 
         const fragment = document.createDocumentFragment();
-        const items = Ceres.search(this.root, query, this.limit);
+        const items = Ceres.search(query, this.limit);
         const firstItem = items[0] ?? '';
 
         for (const item of items) {
             const label = item.label;
-            const suggestionItem = Abyss.el('li', 'abyss-suggestion-item', label);
-            suggestionItem.dataset.value = label;
+            const suggestion = Abyss.el('li', 'abyss-suggestion', label);
+            suggestion.dataset.value = label;
 
-            fragment.appendChild(suggestionItem);
+            fragment.appendChild(suggestion);
         }
 
         if ((items.length === querythis.previousCount) && (firstItem === this.previousFirstItem)) return;
@@ -143,22 +141,22 @@ export class Abyss {
         this.previousFirstItem = firstItem;
         this.currentFocus = 0;
 
-        this.suggestionsContainer.replaceChildren();
+        this.container.replaceChildren();
 
         if (items.length > 0) {
             if (!this.isOpen) {
                 this.open();
             }
 
-            this.suggestionsContainer.appendChild(fragment);
-            this.suggestionsContainer.children[this.currentFocus].dataset.abyssIsActive = 'true';
+            this.container.appendChild(fragment);
+            this.container.children[this.currentFocus].dataset.abyssIsActive = 'true';
         } else {
             this.close();
         }
     }
 
     handleSuggestionClick(e) {
-        const target = e.target.closest('.abyss-suggestion-item');
+        const target = e.target.closest('.abyss-suggestion');
 
         if (!target) return;
 
@@ -167,11 +165,11 @@ export class Abyss {
     }
 
     handleSuggestionMouseover(e) {
-        const target = e.target.closest('.abyss-suggestion-item');
+        const target = e.target.closest('.abyss-suggestion');
 
         if (!target) return;
 
-        const hoverIndex = [...this.suggestionsContainer.children].indexOf(target);
+        const hoverIndex = [...this.container.children].indexOf(target);
         this.currentFocus = hoverIndex;
         this.updateActiveItem();
     }
@@ -180,7 +178,7 @@ export class Abyss {
         if (e.key === 'Enter' && !e.isComposing) {
             e.preventDefault();
 
-            const activeSuggestion = this.suggestionsContainer.querySelector('[data-abyss-is-active="true"]');
+            const activeSuggestion = this.container.querySelector('[data-abyss-is-active="true"]');
 
             if (activeSuggestion) {
                 this.inputEl.value = activeSuggestion.textContent;

@@ -2,7 +2,7 @@
     --z-index-abyss: 1000;
 }
 
-.abyss-suggestions-container {
+.abyss-container {
     position: absolute;
     display: none;
     background-color: white;
@@ -10,16 +10,16 @@
     z-index: var(--z-index-abyss);
 }
 
-.abyss-suggestions-container[data-abyss-is-open="true"] {
+.abyss-container[data-abyss-is-open="true"] {
     display: block;
 }
 
-.abyss-suggestion-item {
+.abyss-suggestion {
     padding: 8px;
     color: oklch(37.2% 0.044 257.287);
     cursor: pointer;
 }
 
-.abyss-suggestion-item[data-abyss-is-active="true"] {
+.abyss-suggestion[data-abyss-is-active="true"] {
     background-color: oklch(96.8% 0.007 247.896);
 }

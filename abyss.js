@@ -1,3 +1,5 @@
+import { Ceres } from 'https://cdn.jsdelivr.net/gh/amemiyadm/ceres@main/ceres.js';
+
 export class Abyss {
     static el(tag, className = '', text = '') {
         const element = document.createElement(tag);
@@ -26,8 +28,7 @@ export class Abyss {
         this.resizeMonitor();
     }
 
-    static hiraItemsCache = new WeakMap();
-    static aliasesCache = new WeakMap();
+    static dataCache = new WeakMap();
     static activeInstance;
 
     isOpen = false;
@@ -36,40 +37,16 @@ export class Abyss {
     currentFocus = 0;
     suggestionsContainer = Abyss.el('ul', 'abyss-suggestions-container');
 
-    constructor(inputEl, words, aliasesDict = {}, suggestionLimit = 4) {
+    constructor(inputEl, data, limit = 4) {
         this.inputEl = inputEl;
-        this.suggestionLimit = suggestionLimit;
+        this.limit = limit;
+        this.root = Abyss.dataCache.get(data);
 
-        // 単語リストをキーに平仮名リストをキャッシュ
-        if (!Abyss.hiraItemsCache.has(words)) {
-            Abyss.hiraItemsCache.set(words, words.map((word) => Abyss.kataToHira(word)));
+        if (!this.root) {
+            this.root = new Ceres();
+            Ceres.buildTrie(this.root, data)
+            Abyss.dataCache.set(data, this.root);
         }
-
-        // 別名辞書をキーに平仮名別名リスト・別名リスト・逆引き辞書をキャッシュ
-        if (!Abyss.aliasesCache.has(aliasesDict)) {
-            const aliases = [];
-            const reverseDict = {};
-
-            if (aliasesDict) {
-                Object.entries(aliasesDict).forEach(([word, values]) => {
-                    values.forEach((definition) => {
-                        aliases.push(definition);
-                        reverseDict[definition] = word;
-                    });
-                });
-            }
-
-            Abyss.aliasesCache.set(aliasesDict, {
-                aliases: aliases,
-                hiraAliases: aliases.map((word) => Abyss.kataToHira(word)),
-                reverseDict: reverseDict
-            });
-        }
-
-        const { aliases, hiraAliases, reverseDict } = Abyss.aliasesCache.get(aliasesDict);
-        this.items = [...words, ...aliases];
-        this.hiraItems = [...Abyss.hiraItemsCache.get(words), ...hiraAliases];
-        this.reverseDict = reverseDict;
 
         this.inputEl.addEventListener('input', this);
         this.suggestionsContainer.addEventListener('click', this);
@@ -149,41 +126,26 @@ export class Abyss {
         }
 
         const fragment = document.createDocumentFragment();
-        let firstItem;
-        const seen = new Set();
+        const items = Ceres.search(this.root, query, this.limit);
+        const firstItem = items[0] ?? '';
 
-        for (const [index, word] of this.hiraItems.entries()) {
-            if (seen.size >= this.suggestionLimit) break;
+        for (const item of items) {
+            const label = item.label;
+            const suggestionItem = Abyss.el('li', 'abyss-suggestion-item', label);
+            suggestionItem.dataset.value = label;
 
-            if (word.startsWith(query)) {
-                const originalItem = this.items[index];
-
-                if (seen.size === 0) {
-                    firstItem = originalItem;
-                }
-
-                const label = this.reverseDict[originalItem] ?? originalItem;
-
-                if (seen.has(label)) continue;
-
-                seen.add(label);
-
-                const suggestionItem = Abyss.el('li', 'abyss-suggestion-item', label);
-                suggestionItem.dataset.value = label;
-
-                fragment.appendChild(suggestionItem);
-            }
+            fragment.appendChild(suggestionItem);
         }
 
-        if ((seen.size === this.previousCount) && (firstItem === this.previousFirstItem)) return;
+        if ((items.length === querythis.previousCount) && (firstItem === this.previousFirstItem)) return;
 
-        this.previousCount = seen.size;
+        this.previousCount = items.length;
         this.previousFirstItem = firstItem;
         this.currentFocus = 0;
 
         this.suggestionsContainer.replaceChildren();
 
-        if (seen.size > 0) {
+        if (items.length > 0) {
             if (!this.isOpen) {
                 this.open();
             }

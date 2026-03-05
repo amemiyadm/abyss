@@ -127,15 +127,14 @@ export class Abyss {
         const items = Ceres.search(query, this.limit);
         const firstItem = items[0] ?? '';
 
+        if ((items.length === this.previousCount) && (firstItem === this.previousFirstItem)) return;
+
         for (const item of items) {
             const label = item.label;
             const suggestion = Abyss.el('li', 'abyss-suggestion', label);
             suggestion.dataset.value = label;
-
             fragment.appendChild(suggestion);
         }
-
-        if ((items.length === querythis.previousCount) && (firstItem === this.previousFirstItem)) return;
 
         this.previousCount = items.length;
         this.previousFirstItem = firstItem;

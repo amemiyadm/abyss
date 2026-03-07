@@ -130,5 +130,3 @@ export class Abyss {
         this.container.children[this.currentFocus].dataset.abyssIsActive = 'true';
     }
 }
-
-new Abyss(document.getElementById('hoge'), { label: 'あいうえお', keywords: ['あいうえお', 'かきくけこ'] });

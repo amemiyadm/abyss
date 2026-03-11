@@ -89,8 +89,7 @@ export class Abyss {
             const activeSuggestion = this.container.children[this.currentFocus];
 
             if (activeSuggestion) {
-                this.inputEl.value = activeSuggestion.dataset.value;
-                this.toggle(false);
+                this.handleSuggestionClick(activeSuggestion);
             }
 
             return;

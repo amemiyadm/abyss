@@ -48,7 +48,7 @@ export class Abyss {
 
     handleInputElInput() {
         const query = this.inputEl.value;
-        const items = query ? Ceres.search(query, this.limit) : [];
+        const items = query ? this.root.search(query, this.limit) : [];
 
         if (items.length === 0) {
             this.toggle(false);
@@ -130,5 +130,3 @@ export class Abyss {
         this.container.children[this.currentFocus].dataset.abyssIsActive = 'true';
     }
 }
-
-new Abyss(document.getElementById('hoge'), [{ label: 'abc', keywords: ['abc'] }]);

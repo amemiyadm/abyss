@@ -12,7 +12,6 @@ export class Abyss {
         this.limit = limit;
         this.root = cache.get(data) || (cache.set(data, this.root = new Ceres(data)), this.root);
         this.container = el('ul', 'abyss-container');
-        this.previousQuery = '';
         this.currentFocus = 0;
         this.mount(true);
     }
@@ -49,11 +48,6 @@ export class Abyss {
 
     handleInputElInput() {
         const query = this.inputEl.value;
-
-        if (query === this.previousQuery) return;
-
-        this.previousQuery = query;
-        this.currentFocus = 0;
         const items = query ? Ceres.search(query, this.limit) : [];
 
         if (items.length === 0) {
@@ -62,12 +56,15 @@ export class Abyss {
             return;
         }
 
+        this.toggle(true);
+        this.currentFocus = 0;
+
+        const suggestions = this.container.children;
+
+        if (suggestions.length === items.length && items.every((item, i) => suggestions[i].dataset.value === item.label)) return;
+
         this.container.replaceChildren(...items.map(({ label }, i) => el('li', 'abyss-suggestion', label, { value: label, index: i })));
         this.updateActiveItem();
-
-        if (this.container.dataset.abyssIsOpen !== 'true') {
-            this.toggle(true);
-        }
     }
 
     handleSuggestionClick(target) {
@@ -86,9 +83,9 @@ export class Abyss {
         const { key, isComposing } = e;
 
         if (key === 'Enter' && !isComposing) {
-            const activeSuggestion = this.container.children[this.currentFocus];
-
             e.preventDefault();
+
+            const activeSuggestion = this.container.children[this.currentFocus];
 
             if (activeSuggestion) {
                 this.inputEl.value = activeSuggestion.dataset.value;
@@ -106,15 +103,18 @@ export class Abyss {
         }
 
         if (key === 'ArrowUp' || key === 'ArrowDown') {
+            e.preventDefault();
+
             const len = this.container.children.length;
 
-            e.preventDefault();
             this.currentFocus = (this.currentFocus + (key === 'ArrowDown' ? 1 : len - 1)) % len;
             this.updateActiveItem();
         }
     }
 
     toggle(toOpen) {
+        if (this.container.dataset.abyssIsOpen === String(toOpen)) return;
+
         this.container.dataset.abyssIsOpen = String(toOpen);
         active.obj = toOpen ? this : null;
         toOpen ? setFloatingPosition(this.inputEl, this.container) : null;
@@ -130,3 +130,5 @@ export class Abyss {
         this.container.children[this.currentFocus].dataset.abyssIsActive = 'true';
     }
 }
+
+new Abyss(document.getElementById('hoge'), [{ label: 'abc', keywords: ['abc'] }]);

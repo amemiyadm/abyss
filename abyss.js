@@ -1,5 +1,6 @@
 import { Ceres } from 'https://cdn.jsdelivr.net/gh/amemiyadm/ceres@main/ceres.js';
-import { el, setFloatingPosition, resizeMonitor, clickOutside } from './utils.js';
+import { el } from 'https://cdn.jsdelivr.net/gh/amemiyadm/novella@main/novella.js';
+import { setFloatingPosition, resizeMonitor, clickOutside } from './utils.js';
 
 const cache = new WeakMap();
 const active = { obj: null }

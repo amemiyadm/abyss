@@ -25,6 +25,7 @@ export class Abyss {
     mount(isMount) {
         const action = isMount ? 'addEventListener' : 'removeEventListener';
 
+        this.inputEl[action]('click', this);
         this.inputEl[action]('input', this);
         this.inputEl[action]('keydown', this);
         this.container[action]('click', this);
@@ -37,13 +38,13 @@ export class Abyss {
         let suggestion;
 
         if (target === this.inputEl) {
-            return type === 'input' ? this.handleInputElInput(e) :
-                type === 'keydown' ? this.handleInputElKeyDown(e) : undefined;
+            return (type === 'click') || (type === 'input') ? this.handleInputElInput(e) :
+                (type === 'keydown') ? this.handleInputElKeyDown(e) : undefined;
         }
 
         if (suggestion = target.closest('.abyss-suggestion')) {
-            return type === 'click' ? this.handleSuggestionClick(suggestion) :
-                type === 'mouseover' ? this.handleSuggestionMouseover(suggestion) : undefined;
+            return (type === 'click') ? this.handleSuggestionClick(suggestion) :
+                (type === 'mouseover') ? this.handleSuggestionMouseover(suggestion) : undefined;
         }
     }
 

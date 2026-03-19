@@ -9,10 +9,9 @@ resizeMonitor(active);
 clickOutside(active);
 
 export class Abyss {
-    constructor(inputEl, data, limit = Infinity, imgs = {}) {
+    constructor(inputEl, data, limit = Infinity) {
         this.inputEl = inputEl;
         this.limit = limit;
-        this.imgs = imgs;
         this.root = cache.get(data) || (cache.set(data, this.root = new Ceres(data)), this.root);
         this.container = el('ul', 'abyss-container');
         this.currentFocus = 0;
@@ -63,13 +62,11 @@ export class Abyss {
 
         if (suggestions.length === items.length && items.every((item, i) => suggestions[i].dataset.value === item.label)) return;
 
-        this.container.replaceChildren(...items.map(({ label }, i) => {
+        this.container.replaceChildren(...items.map(({ label, img }, i) => {
             const suggestion = el('li', 'abyss-suggestion', label, { value: label, index: i });
 
-            if (this.imgs[label]) {
-                const img = this.imgs[label];
+            if (img) {
                 const icon = new Image(...img.size);
-
                 icon.src = img.url;
                 icon.alt = label;
                 Object.assign(icon.style, img.style);
